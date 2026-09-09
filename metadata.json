@@ -1,0 +1,6 @@
+{
+  "name": "Zika Board - Gestão",
+  "description": "Painel premium de controle para agência com Kanban e anotações.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

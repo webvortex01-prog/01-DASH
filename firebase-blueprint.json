@@ -1,0 +1,24 @@
+{
+  "rules": "firestore.rules",
+  "schema": {
+    "tasks": {
+      "description": "Missões (Kanban)",
+      "fields": {
+        "title": "string",
+        "description": "string",
+        "status": "string",
+        "createdAt": "number",
+        "userId": "string"
+      }
+    },
+    "notes": {
+      "description": "Anotações e Ideias",
+      "fields": {
+        "title": "string",
+        "content": "string",
+        "createdAt": "number",
+        "userId": "string"
+      }
+    }
+  }
+}
