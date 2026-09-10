@@ -72,7 +72,7 @@ export function Focus() {
         <p className="text-zinc-400 text-lg">Zera as distrações. O mundo lá fora que espere, agora é hora de amassar.</p>
       </div>
 
-      <div className="bg-zinc-900/60 border border-zinc-800/80 p-8 rounded-[3rem] shadow-2xl flex flex-col items-center gap-8 w-full max-w-md relative overflow-hidden">
+      <div className="bg-zinc-900/60 border border-zinc-800/80 p-8 pb-10 rounded-[3rem] shadow-2xl flex flex-col items-center gap-8 w-full max-w-md relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
         
         <div className="flex bg-zinc-950/50 p-1.5 rounded-2xl gap-1">
