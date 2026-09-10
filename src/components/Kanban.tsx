@@ -72,7 +72,7 @@ export function Kanban({ tasks, onUpdateStatus, onAddTask, onDeleteTask }: Kanba
             key={col.id}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, col.id)}
-            className="flex-1 min-w-[320px] max-w-sm flex flex-col bg-zinc-900/40 rounded-[2rem] border border-zinc-800/80 p-5 shadow-sm"
+            className="w-full lg:flex-1 lg:min-w-[320px] max-w-sm flex flex-col bg-zinc-900/40 rounded-[2rem] border border-zinc-800/80 p-5 shadow-sm mx-auto"
           >
             <div className={`mb-6 px-4 py-3 rounded-2xl border w-full flex items-center justify-between ${col.color}`}>
               <div className="flex items-center gap-3">

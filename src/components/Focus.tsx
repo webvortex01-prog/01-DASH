@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Flame } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Play, Pause, RotateCcw, Flame, Settings } from 'lucide-react';
 import { motion } from 'motion/react';
+import confetti from 'canvas-confetti';
 
 export function Focus() {
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
+  const [customMinutes, setCustomMinutes] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(customMinutes * 60);
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState<'focus' | 'break'>('focus');
+  const [isSettingTime, setIsSettingTime] = useState(false);
 
   useEffect(() => {
     let interval: number | undefined;
@@ -13,9 +16,21 @@ export function Focus() {
       interval = window.setInterval(() => {
         setTimeLeft((time) => time - 1);
       }, 1000);
-    } else if (timeLeft === 0) {
+    } else if (isActive && timeLeft === 0) {
       setIsActive(false);
-      // Play a sound or notification here if possible
+      // Confetti celebration when timer hits zero
+      confetti({
+        particleCount: 200,
+        spread: 90,
+        origin: { y: 0.5 },
+        colors: ['#fbbf24', '#f59e0b', '#ea580c', '#c2410c'],
+        zIndex: 9999
+      });
+      // Try to play a notification sound
+      try {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play();
+      } catch(e) {}
     }
     return () => clearInterval(interval);
   }, [isActive, timeLeft]);
@@ -24,13 +39,21 @@ export function Focus() {
 
   const resetTimer = () => {
     setIsActive(false);
-    setTimeLeft(mode === 'focus' ? 25 * 60 : 5 * 60);
+    setTimeLeft(mode === 'focus' ? customMinutes * 60 : 5 * 60);
   };
 
   const switchMode = (newMode: 'focus' | 'break') => {
     setMode(newMode);
     setIsActive(false);
-    setTimeLeft(newMode === 'focus' ? 25 * 60 : 5 * 60);
+    setTimeLeft(newMode === 'focus' ? customMinutes * 60 : 5 * 60);
+  };
+
+  const applyCustomTime = (minutes: number) => {
+    setCustomMinutes(minutes);
+    setTimeLeft(minutes * 60);
+    setIsSettingTime(false);
+    setMode('focus');
+    setIsActive(false);
   };
 
   const formatTime = (seconds: number) => {
@@ -55,21 +78,52 @@ export function Focus() {
         <div className="flex bg-zinc-950/50 p-1.5 rounded-2xl gap-1">
           <button
             onClick={() => switchMode('focus')}
-            className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm ${
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all text-sm ${
               mode === 'focus' ? 'bg-amber-500 text-zinc-950 shadow-md' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            Foco Total (25m)
+            Foco Total
           </button>
           <button
             onClick={() => switchMode('break')}
-            className={`px-6 py-2.5 rounded-xl font-bold transition-all text-sm ${
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all text-sm ${
               mode === 'break' ? 'bg-zinc-700 text-zinc-100 shadow-md' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             Respiro (5m)
           </button>
+          <button
+            onClick={() => setIsSettingTime(!isSettingTime)}
+            className={`px-3 py-2.5 rounded-xl font-bold transition-all flex items-center justify-center ${
+              isSettingTime ? 'bg-zinc-800 text-amber-500' : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+            title="Configurar Tempo"
+          >
+            <Settings size={18} />
+          </button>
         </div>
+
+        {isSettingTime && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="flex flex-wrap items-center justify-center gap-2 mt-2"
+          >
+            {[15, 30, 45, 60, 90, 120].map(min => (
+              <button
+                key={min}
+                onClick={() => applyCustomTime(min)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                  customMinutes === min 
+                    ? 'bg-amber-500/10 border-amber-500 text-amber-500' 
+                    : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200'
+                }`}
+              >
+                {min} min
+              </button>
+            ))}
+          </motion.div>
+        )}
 
         <div className="relative flex items-center justify-center">
           <motion.div 

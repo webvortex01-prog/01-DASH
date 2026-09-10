@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, KanbanSquare, Crosshair, Hexagon, Timer, LogIn, LogOut, Loader2 } from 'lucide-react';
+import { LayoutDashboard, KanbanSquare, Crosshair, Hexagon, Timer, LogIn, LogOut, Loader2, Menu, X } from 'lucide-react';
 import { Task, Note, TaskStatus } from './types';
 import { Kanban } from './components/Kanban';
 import { Notes } from './components/Notes';
@@ -12,6 +12,7 @@ import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'overview' | 'kanban' | 'notes' | 'focus'>('overview');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Firebase State
   const [isInitializing, setIsInitializing] = useState(true);
@@ -133,19 +134,49 @@ export default function App() {
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-50 overflow-hidden font-sans selection:bg-amber-500/30">
       
+      {/* Mobile Header */}
+      <div className="lg:hidden absolute top-0 left-0 right-0 h-16 bg-zinc-950 border-b border-zinc-800/80 z-30 flex items-center justify-between px-4 shadow-md">
+        <div className="flex items-center gap-2">
+          <div className="bg-amber-500 p-1.5 rounded-lg">
+             <Hexagon className="text-zinc-950 fill-zinc-950" size={20} strokeWidth={2.5} />
+          </div>
+          <h1 className="font-black text-xl tracking-tighter leading-none text-zinc-100 uppercase">Zika<span className="text-amber-500">Board</span></h1>
+        </div>
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 text-zinc-400 hover:text-zinc-100 transition-colors"
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar Navigation */}
-      <aside className="w-72 bg-zinc-950 border-r border-zinc-800/80 flex flex-col shrink-0 relative z-20 shadow-2xl">
-        <div className="h-28 flex items-center px-8 border-b border-zinc-800/80">
-          <div className="bg-amber-500 p-2.5 rounded-xl mr-4 shadow-[0_0_15px_rgba(251,191,36,0.3)]">
-             <Hexagon className="text-zinc-950 fill-zinc-950" size={28} strokeWidth={2.5} />
+      <aside className={`w-72 bg-zinc-950 border-r border-zinc-800/80 flex flex-col shrink-0 fixed lg:relative z-50 h-full transition-transform duration-300 ease-in-out shadow-2xl ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="h-16 lg:h-28 flex items-center px-6 lg:px-8 border-b border-zinc-800/80 shrink-0">
+          <div className="bg-amber-500 p-2 lg:p-2.5 rounded-xl mr-3 lg:mr-4 shadow-[0_0_15px_rgba(251,191,36,0.3)]">
+             <Hexagon className="text-zinc-950 fill-zinc-950" size={24} strokeWidth={2.5} />
           </div>
           <div className="flex flex-col">
-            <h1 className="font-black text-2xl tracking-tighter leading-none text-zinc-100 uppercase">Zika<span className="text-amber-500">Board</span></h1>
+            <h1 className="font-black text-xl lg:text-2xl tracking-tighter leading-none text-zinc-100 uppercase">Zika<span className="text-amber-500">Board</span></h1>
             <span className="text-[10px] font-black text-zinc-500 tracking-[0.2em] uppercase mt-1">Agency OS</span>
           </div>
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="lg:hidden ml-auto p-2 text-zinc-500 hover:text-zinc-300"
+          >
+            <X size={20} />
+          </button>
         </div>
         
-        <nav className="flex-1 py-8 px-4 flex flex-col gap-2">
+        <nav className="flex-1 py-6 lg:py-8 px-4 flex flex-col gap-2 overflow-y-auto">
           <div className="px-4 mb-4">
             <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">Painel de Controle</p>
           </div>
@@ -155,11 +186,14 @@ export default function App() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsMobileMenuOpen(false);
+                }}
                 className={`flex items-center gap-3 px-5 py-4 rounded-2xl transition-all duration-200 font-bold text-sm tracking-wide ${
                   isActive 
-                    ? 'bg-amber-500 text-zinc-950 shadow-[0_0_20px_rgba(251,191,36,0.15)] translate-x-1' 
-                    : 'text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200 hover:translate-x-1'
+                    ? 'bg-amber-500 text-zinc-950 shadow-[0_0_20px_rgba(251,191,36,0.15)] lg:translate-x-1' 
+                    : 'text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200 lg:hover:translate-x-1'
                 }`}
               >
                 <Icon size={20} className={isActive ? 'text-zinc-950' : 'text-zinc-600'} strokeWidth={isActive ? 2.5 : 2.5} />
@@ -169,37 +203,37 @@ export default function App() {
           })}
         </nav>
 
-        <div className="p-6 border-t border-zinc-800/80 bg-zinc-950">
-          <div className="flex items-center gap-4 bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+        <div className="p-4 lg:p-6 border-t border-zinc-800/80 bg-zinc-950 shrink-0">
+          <div className="flex items-center gap-3 lg:gap-4 bg-zinc-900 p-3 lg:p-4 rounded-2xl border border-zinc-800">
             {user.photoURL ? (
-              <img src={user.photoURL} alt="User" className="w-12 h-12 rounded-xl object-cover" />
+              <img src={user.photoURL} alt="User" className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl object-cover shrink-0" />
             ) : (
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center font-black text-zinc-950 shadow-inner text-lg">
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center font-black text-zinc-950 shadow-inner text-base lg:text-lg shrink-0">
                 {user.displayName?.charAt(0) || 'CE'}
               </div>
             )}
             <div className="flex flex-col flex-1 overflow-hidden">
-              <span className="text-sm font-black text-zinc-100 truncate uppercase">{user.displayName || 'Império'}</span>
-              <span className="text-[10px] text-amber-500 font-bold truncate uppercase tracking-widest">CEO Mode ON</span>
+              <span className="text-xs lg:text-sm font-black text-zinc-100 truncate uppercase">{user.displayName || 'Império'}</span>
+              <span className="text-[9px] lg:text-[10px] text-amber-500 font-bold truncate uppercase tracking-widest">CEO Mode ON</span>
             </div>
             <button 
               onClick={handleLogout}
-              className="p-2 text-zinc-500 hover:text-red-500 hover:bg-zinc-800 rounded-lg transition-colors"
+              className="p-2 text-zinc-500 hover:text-red-500 hover:bg-zinc-800 rounded-lg transition-colors shrink-0"
               title="Sair da Base"
             >
-              <LogOut size={18} />
+              <LogOut size={16} />
             </button>
           </div>
         </div>
       </aside>
 
       {/* Main Work Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-[#09090b]">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-[#09090b] pt-16 lg:pt-0">
         {/* Gritty background texture */}
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
         <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-amber-500/[0.03] to-transparent pointer-events-none" />
         
-        <div className="flex-1 overflow-y-auto p-8 lg:p-12 relative z-10 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 relative z-10 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
           {activeTab === 'overview' && <Overview tasks={tasks} notes={notes} onNavigate={(t) => setActiveTab(t as any)} />}
           {activeTab === 'kanban' && <Kanban tasks={tasks} onAddTask={addTask} onDeleteTask={deleteTask} onUpdateStatus={updateTaskStatus} />}
           {activeTab === 'notes' && <Notes notes={notes} onAddNote={addNote} onDeleteNote={deleteNote} />}
