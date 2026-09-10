@@ -38,15 +38,24 @@ export default function App() {
     if (!user || !db) return;
 
     const tasksRef = collection(db, 'tasks');
-    const qTasks = query(tasksRef, where('userId', '==', user.uid), orderBy('createdAt', 'asc'));
+    const qTasks = query(tasksRef, where('userId', '==', user.uid));
     const unsubTasks = onSnapshot(qTasks, (snap) => {
-       setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() } as Task)));
+       const fetchedTasks = snap.docs.map(d => ({ id: d.id, ...d.data() } as Task));
+       fetchedTasks.sort((a, b) => a.createdAt - b.createdAt);
+       setTasks(fetchedTasks);
+    }, (error) => {
+       console.error("Erro Firebase (Tarefas):", error);
+       alert("ERRO FIREBASE: O Banco de Dados recusou salvar/ler. Provavelmente as 'Rules' no Firebase Console estão bloqueando. Erro: " + error.message);
     });
 
     const notesRef = collection(db, 'notes');
-    const qNotes = query(notesRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+    const qNotes = query(notesRef, where('userId', '==', user.uid));
     const unsubNotes = onSnapshot(qNotes, (snap) => {
-       setNotes(snap.docs.map(d => ({ id: d.id, ...d.data() } as Note)));
+       const fetchedNotes = snap.docs.map(d => ({ id: d.id, ...d.data() } as Note));
+       fetchedNotes.sort((a, b) => b.createdAt - a.createdAt);
+       setNotes(fetchedNotes);
+    }, (error) => {
+       console.error("Erro Firebase (Notas):", error);
     });
 
     return () => { unsubTasks(); unsubNotes(); };
@@ -58,34 +67,54 @@ export default function App() {
     await signInWithPopup(auth, provider);
   };
 
-  const handleLogout = () => {
+  const handleLogout = () => { 
      if (auth) signOut(auth);
   };
 
   // Firebase Mutations
   const addTask = async (status: TaskStatus, title: string, description: string) => {
     if (!user || !db) return;
-    await addDoc(collection(db, 'tasks'), { title, description, status, userId: user.uid, createdAt: Date.now() });
+    try {
+      await addDoc(collection(db, 'tasks'), { title, description, status, userId: user.uid, createdAt: Date.now() });
+    } catch (e: any) {
+      alert("ERRO AO SALVAR TAREFA (O Firebase bloqueou): " + e.message);
+    }
   };
   
   const updateTaskStatus = async (id: string, status: TaskStatus) => {
     if (!db) return;
-    await updateDoc(doc(db, 'tasks', id), { status });
+    try {
+      await updateDoc(doc(db, 'tasks', id), { status });
+    } catch (e: any) {
+      alert("ERRO AO ATUALIZAR TAREFA: " + e.message);
+    }
   };
   
   const deleteTask = async (id: string) => {
     if (!db) return;
-    await deleteDoc(doc(db, 'tasks', id));
+    try {
+      await deleteDoc(doc(db, 'tasks', id));
+    } catch (e: any) {
+      alert("ERRO AO DELETAR TAREFA: " + e.message);
+    }
   };
 
   const addNote = async (title: string, content: string) => {
     if (!user || !db) return;
-    await addDoc(collection(db, 'notes'), { title, content, userId: user.uid, createdAt: Date.now() });
+    try {
+      await addDoc(collection(db, 'notes'), { title, content, userId: user.uid, createdAt: Date.now() });
+    } catch (e: any) {
+      alert("ERRO AO SALVAR NOTA: " + e.message);
+    }
   };
   
   const deleteNote = async (id: string) => {
     if (!db) return;
-    await deleteDoc(doc(db, 'notes', id));
+    try {
+      await deleteDoc(doc(db, 'notes', id));
+    } catch (e: any) {
+      alert("ERRO AO DELETAR NOTA: " + e.message);
+    }
   };
 
   if (isInitializing) {
