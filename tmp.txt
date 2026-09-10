@@ -1,0 +1,10 @@
+    const qTasks = query(tasksRef, where('userId', '==', user.uid), orderBy('createdAt', 'asc'));
+    const unsubTasks = onSnapshot(qTasks, (snap) => {
+       setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() } as Task)));
+    });
+
+    const notesRef = collection(db, 'notes');
+    const qNotes = query(notesRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+    const unsubNotes = onSnapshot(qNotes, (snap) => {
+       setNotes(snap.docs.map(d => ({ id: d.id, ...d.data() } as Note)));
+    });
