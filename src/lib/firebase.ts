@@ -3,16 +3,12 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  projectId: "blissful-fabric-v9brs",
-  appId: "1:314673019253:web:ebe0e77532d299bef3bb3c",
-  apiKey: "AIzaSyD1jtLzYtZSy5ct6BtZilohSk5lIAtTiU0",
-  authDomain: "blissful-fabric-v9brs.firebaseapp.com",
-  firestoreDatabaseId: "ai-studio-zikaboardgesto-d7655a1a-a21f-4e7b-a08a-95153a9313f5",
-  storageBucket: "blissful-fabric-v9brs.firebasestorage.app",
-  messagingSenderId: "314673019253",
-  measurementId: "",
-  oAuthClientId: "314673019253-ttouqpliemqgp1dmebbe54k8vfj056mj.apps.googleusercontent.com",
-  recaptchaSiteKey: ""
+  apiKey: "AIzaSyAvwUbsy6E4vZRho1PRDqfU0Ixc1daMCkQ",
+  authDomain: "zikaboard-12697.firebaseapp.com",
+  projectId: "zikaboard-12697",
+  storageBucket: "zikaboard-12697.firebasestorage.app",
+  messagingSenderId: "625769604144",
+  appId: "1:625769604144:web:f468904f2536a93cab39f5"
 };
 
 let app: any;
