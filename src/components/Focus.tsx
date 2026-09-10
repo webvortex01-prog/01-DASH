@@ -137,22 +137,33 @@ export function Focus() {
           </motion.div>
         </div>
 
-        <div className="flex items-center gap-4 mt-4">
+        <div className="flex items-center gap-4 mt-4 w-full px-4">
           <button
             onClick={resetTimer}
-            className="w-14 h-14 flex items-center justify-center rounded-2xl bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 transition-all"
+            className="h-16 flex-1 flex items-center justify-center gap-2 rounded-2xl bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 transition-all font-bold uppercase tracking-wider text-sm"
           >
-            <RotateCcw size={24} />
+            <RotateCcw size={20} />
+            Resetar
           </button>
           <button
             onClick={toggleTimer}
-            className={`w-20 h-20 flex items-center justify-center rounded-[2rem] transition-all transform hover:scale-105 shadow-xl ${
+            className={`h-16 flex-[2] flex items-center justify-center gap-3 rounded-[1.5rem] transition-all transform hover:scale-[1.02] shadow-xl font-black uppercase tracking-widest ${
               isActive 
                 ? 'bg-red-500/10 text-red-500 border border-red-500/50 hover:bg-red-500/20' 
-                : 'bg-amber-500 text-zinc-950 border border-amber-400 shadow-amber-500/20'
+                : 'bg-amber-500 text-zinc-950 border border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.2)]'
             }`}
           >
-            {isActive ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-2" />}
+            {isActive ? (
+              <>
+                <Pause size={24} fill="currentColor" />
+                Pausar
+              </>
+            ) : (
+              <>
+                <Play size={24} fill="currentColor" />
+                Iniciar Foco
+              </>
+            )}
           </button>
         </div>
       </div>
