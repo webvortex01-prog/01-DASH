@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Task, TaskStatus } from '../types';
-import { Plus, Trash2, Crosshair, Zap, Trophy } from 'lucide-react';
+import { Plus, Trash2, Crosshair, Zap, Trophy, ArrowRight, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 
@@ -113,6 +113,32 @@ export function Kanban({ tasks, onUpdateStatus, onAddTask, onDeleteTask }: Kanba
                   {task.description && (
                     <p className="text-sm text-zinc-400 mt-3 line-clamp-3 font-medium">{task.description}</p>
                   )}
+                  
+                  {/* Mobile Movement Controls */}
+                  <div className="flex lg:hidden items-center justify-end gap-2 mt-4 pt-3 border-t border-zinc-800">
+                    {col.id === 'in-progress' || col.id === 'done' ? (
+                      <button
+                        onClick={() => onUpdateStatus(task.id, col.id === 'done' ? 'in-progress' : 'todo')}
+                        className="p-2 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 rounded-lg transition-colors flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
+                      >
+                        <ArrowLeft size={14} /> Voltar
+                      </button>
+                    ) : null}
+                    {col.id === 'todo' || col.id === 'in-progress' ? (
+                      <button
+                        onClick={(e) => {
+                          const nextStatus = col.id === 'todo' ? 'in-progress' : 'done';
+                          if (nextStatus === 'done') {
+                            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#10b981', '#34d399', '#fcd34d', '#f59e0b'], zIndex: 9999 });
+                          }
+                          onUpdateStatus(task.id, nextStatus);
+                        }}
+                        className="p-2 text-zinc-500 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
+                      >
+                        Avançar <ArrowRight size={14} />
+                      </button>
+                    ) : null}
+                  </div>
                 </motion.div>
               ))}
 
