@@ -123,7 +123,7 @@ export default function App() {
   const addXP = async (amount: number) => {
     if (!user || !db) return;
     const statsRef = doc(db, 'stats', user.uid);
-    let newXp = stats.xp + amount;
+    let newXp = Math.max(0, stats.xp + amount); // Prevent negative XP
     let newLevel = Math.floor(newXp / 100) + 1;
     
     try {
@@ -134,9 +134,17 @@ export default function App() {
   };
 
   const handleTaskComplete = (taskId: string, newStatus: TaskStatus) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    
+    const oldStatus = task.status;
     updateTaskStatus(taskId, newStatus);
-    if (newStatus === 'done') {
+    
+    // Add XP if marked as done, remove XP if unmarked from done
+    if (oldStatus !== 'done' && newStatus === 'done') {
       addXP(10);
+    } else if (oldStatus === 'done' && newStatus !== 'done') {
+      addXP(-10);
     }
   };
 
@@ -163,7 +171,11 @@ export default function App() {
       completedDates: newDates
     });
     
-    if (!isCompleted) addXP(5);
+    if (!isCompleted) {
+      addXP(5);
+    } else {
+      addXP(-5);
+    }
   };
 
   const deleteHabit = async (id: string) => {
