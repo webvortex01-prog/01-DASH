@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, KanbanSquare, Crosshair, Hexagon, Timer, LogIn, LogOut, Loader2, Menu, X } from 'lucide-react';
+import { LayoutDashboard, KanbanSquare, Crosshair, Hexagon, Timer, LogIn, LogOut, Loader2, Menu, X, Target } from 'lucide-react';
 import { Task, Note, TaskStatus } from './types';
 import { Kanban } from './components/Kanban';
 import { Notes } from './components/Notes';
@@ -159,7 +159,41 @@ export default function App() {
     { id: 'kanban', label: 'Trincheira (Kanban)', icon: KanbanSquare },
     { id: 'focus', label: 'Foco Total', icon: Timer },
     { id: 'notes', label: 'Arsenal (Ideias)', icon: Crosshair },
+    { id: 'habits', label: 'Hábitos (Tracker)', icon: Target },
   ] as const;
+
+  useEffect(() => {
+    if (!user) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        return;
+      }
+      
+      switch (e.key.toLowerCase()) {
+        case 'q':
+          setActiveTab('overview');
+          break;
+        case 'k':
+          setActiveTab('kanban');
+          break;
+        case 'f':
+          setActiveTab('focus');
+          break;
+        case 'a':
+        case 'n':
+          setActiveTab('notes');
+          break;
+        case 'h':
+          setActiveTab('habits');
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [user]);
 
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-50 overflow-hidden font-sans selection:bg-amber-500/30">
