@@ -5,6 +5,7 @@ import { Kanban } from './components/Kanban';
 import { Notes } from './components/Notes';
 import { Overview } from './components/Overview';
 import { Focus } from './components/Focus';
+import { PWAInstallButton } from './components/PWAInstallButton';
 
 import { initFirebase } from './lib/firebase';
 import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
@@ -233,6 +234,7 @@ export default function App() {
         </nav>
 
         <div className="p-4 lg:p-6 border-t border-zinc-800/80 bg-zinc-950 shrink-0">
+          <PWAInstallButton />
           <div className="flex items-center gap-3 lg:gap-4 bg-zinc-900 p-3 lg:p-4 rounded-2xl border border-zinc-800">
             {user.photoURL ? (
               <img src={user.photoURL} alt="User" className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl object-cover shrink-0" />
