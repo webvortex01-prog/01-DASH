@@ -87,6 +87,39 @@ export default function App() {
     };
   }, [user, db]);
 
+  useEffect(() => {
+    if (!user) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        return;
+      }
+      
+      switch (e.key.toLowerCase()) {
+        case 'q':
+          setActiveTab('overview');
+          break;
+        case 'k':
+          setActiveTab('kanban');
+          break;
+        case 'f':
+          setActiveTab('focus');
+          break;
+        case 'a':
+        case 'n':
+          setActiveTab('notes');
+          break;
+        case 'h':
+          setActiveTab('habits');
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [user]);
+
   const addXP = async (amount: number) => {
     if (!user || !db) return;
     const statsRef = doc(db, 'stats', user.uid);
@@ -237,38 +270,7 @@ export default function App() {
     { id: 'habits', label: 'Hábitos (Tracker)', icon: Target },
   ] as const;
 
-  useEffect(() => {
-    if (!user) return;
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in an input
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
-        return;
-      }
-      
-      switch (e.key.toLowerCase()) {
-        case 'q':
-          setActiveTab('overview');
-          break;
-        case 'k':
-          setActiveTab('kanban');
-          break;
-        case 'f':
-          setActiveTab('focus');
-          break;
-        case 'a':
-        case 'n':
-          setActiveTab('notes');
-          break;
-        case 'h':
-          setActiveTab('habits');
-          break;
-      }
-    };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [user]);
 
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-50 overflow-hidden font-sans selection:bg-amber-500/30">
