@@ -16,3 +16,16 @@ export interface Note {
   createdAt: number;
   userId: string;
 }
+
+export interface Habit {
+  id: string;
+  title: string;
+  completedDates: string[]; // Array of YYYY-MM-DD
+  createdAt: number;
+  userId: string;
+}
+
+export interface UserStats {
+  xp: number;
+  level: number;
+}

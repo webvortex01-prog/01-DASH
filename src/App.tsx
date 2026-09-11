@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, KanbanSquare, Crosshair, Hexagon, Timer, LogIn, LogOut, Loader2, Menu, X, Target } from 'lucide-react';
-import { Task, Note, TaskStatus } from './types';
+import { Task, Note, TaskStatus, Habit, UserStats } from './types';
 import { Kanban } from './components/Kanban';
 import { Notes } from './components/Notes';
 import { Overview } from './components/Overview';
 import { Focus } from './components/Focus';
+import { Habits } from './components/Habits';
 import { PWAInstallButton } from './components/PWAInstallButton';
 
 import { initFirebase } from './lib/firebase';
 import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, orderBy } from 'firebase/firestore';
+import { collection, setDoc, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, orderBy } from 'firebase/firestore';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'kanban' | 'notes' | 'focus'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'kanban' | 'notes' | 'focus' | 'habits'>('overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Firebase State
@@ -23,6 +24,8 @@ export default function App() {
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [stats, setStats] = useState<UserStats>({ xp: 0, level: 1 });
 
   useEffect(() => {
     initFirebase().then(({ auth: fbAuth, db: fbDb }) => {
@@ -42,25 +45,97 @@ export default function App() {
     const qTasks = query(tasksRef, where('userId', '==', user.uid));
     const unsubTasks = onSnapshot(qTasks, (snap) => {
        const fetchedTasks = snap.docs.map(d => ({ id: d.id, ...d.data() } as Task));
-       fetchedTasks.sort((a, b) => a.createdAt - b.createdAt);
+       fetchedTasks.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
        setTasks(fetchedTasks);
     }, (error) => {
        console.error("Erro Firebase (Tarefas):", error);
-       alert("ERRO FIREBASE: O Banco de Dados recusou salvar/ler. Provavelmente as 'Rules' no Firebase Console estão bloqueando. Erro: " + error.message);
+       alert("ERRO FIREBASE: O Banco de Dados recusou salvar/ler. Erro: " + error.message);
     });
 
     const notesRef = collection(db, 'notes');
     const qNotes = query(notesRef, where('userId', '==', user.uid));
     const unsubNotes = onSnapshot(qNotes, (snap) => {
        const fetchedNotes = snap.docs.map(d => ({ id: d.id, ...d.data() } as Note));
-       fetchedNotes.sort((a, b) => b.createdAt - a.createdAt);
+       fetchedNotes.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
        setNotes(fetchedNotes);
     }, (error) => {
        console.error("Erro Firebase (Notas):", error);
     });
 
-    return () => { unsubTasks(); unsubNotes(); };
+    const habitsRef = collection(db, 'habits');
+    const qHabits = query(habitsRef, where('userId', '==', user.uid));
+    const unsubHabits = onSnapshot(qHabits, (snap) => {
+       const fetchedHabits = snap.docs.map(d => ({ id: d.id, ...d.data() } as Habit));
+       fetchedHabits.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+       setHabits(fetchedHabits);
+    });
+
+    const statsRef = doc(db, 'stats', user.uid);
+    const unsubStats = onSnapshot(statsRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setStats(docSnap.data() as UserStats);
+      } else {
+        setStats({ xp: 0, level: 1 });
+      }
+    });
+
+    return () => {
+      unsubTasks();
+      unsubNotes();
+      unsubHabits();
+      unsubStats();
+    };
   }, [user, db]);
+
+  const addXP = async (amount: number) => {
+    if (!user || !db) return;
+    const statsRef = doc(db, 'stats', user.uid);
+    let newXp = stats.xp + amount;
+    let newLevel = Math.floor(newXp / 100) + 1;
+    
+    try {
+      await updateDoc(statsRef, { xp: newXp, level: newLevel });
+    } catch (e) {
+      await setDoc(statsRef, { xp: newXp, level: newLevel });
+    }
+  };
+
+  const handleTaskComplete = (taskId: string, newStatus: TaskStatus) => {
+    updateTaskStatus(taskId, newStatus);
+    if (newStatus === 'done') {
+      addXP(10);
+    }
+  };
+
+  const addHabit = async (title: string) => {
+    if (!user || !title.trim()) return;
+    await addDoc(collection(db, 'habits'), {
+      title,
+      completedDates: [],
+      createdAt: Date.now(),
+      userId: user.uid
+    });
+  };
+
+  const toggleHabit = async (habitId: string, dateStr: string) => {
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) return;
+    
+    const isCompleted = (habit.completedDates || []).includes(dateStr);
+    const newDates = isCompleted 
+      ? (habit.completedDates || []).filter(d => d !== dateStr)
+      : [...(habit.completedDates || []), dateStr];
+      
+    await updateDoc(doc(db, 'habits', habitId), {
+      completedDates: newDates
+    });
+    
+    if (!isCompleted) addXP(5);
+  };
+
+  const deleteHabit = async (id: string) => {
+    await deleteDoc(doc(db, 'habits', id));
+  };
 
   const handleLogin = async () => {
     if (!auth) return;
@@ -279,7 +354,7 @@ export default function App() {
             )}
             <div className="flex flex-col flex-1 overflow-hidden">
               <span className="text-xs lg:text-sm font-black text-zinc-100 truncate uppercase">{user.displayName || 'Império'}</span>
-              <span className="text-[9px] lg:text-[10px] text-amber-500 font-bold truncate uppercase tracking-widest">CEO Mode ON</span>
+              <span className="text-[9px] lg:text-[10px] text-amber-500 font-bold truncate uppercase tracking-widest">Nível {stats.level} • {stats.xp} XP</span>
             </div>
             <button 
               onClick={handleLogout}
@@ -299,10 +374,11 @@ export default function App() {
         <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-amber-500/[0.03] to-transparent pointer-events-none" />
         
         <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 relative z-10 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
-          {activeTab === 'overview' && <Overview tasks={tasks} notes={notes} onNavigate={(t) => setActiveTab(t as any)} />}
-          {activeTab === 'kanban' && <Kanban tasks={tasks} onAddTask={addTask} onDeleteTask={deleteTask} onUpdateStatus={updateTaskStatus} />}
+          {activeTab === 'overview' && <Overview tasks={tasks} notes={notes} stats={stats} onNavigate={(t) => setActiveTab(t as any)} />}
+          {activeTab === 'kanban' && <Kanban tasks={tasks} onAddTask={addTask} onDeleteTask={deleteTask} onUpdateStatus={handleTaskComplete} />}
           {activeTab === 'notes' && <Notes notes={notes} onAddNote={addNote} onDeleteNote={deleteNote} />}
-          {activeTab === 'focus' && <Focus />}
+          {activeTab === 'focus' && <Focus onComplete={() => addXP(20)} />}
+          {activeTab === 'habits' && <Habits habits={habits} onAddHabit={addHabit} onToggleHabit={toggleHabit} onDeleteHabit={deleteHabit} />}
         </div>
       </main>
     </div>
