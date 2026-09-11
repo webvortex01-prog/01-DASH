@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, KanbanSquare, Crosshair, Hexagon, Timer, LogIn, LogOut, Loader2, Menu, X, Target } from 'lucide-react';
+import { LayoutDashboard, KanbanSquare, Crosshair, Hexagon, Timer, LogIn, LogOut, Loader2, Menu, X, Target, RotateCcw } from 'lucide-react';
 import { Task, Note, TaskStatus, Habit, UserStats } from './types';
 import { Kanban } from './components/Kanban';
 import { Notes } from './components/Notes';
@@ -10,7 +10,7 @@ import { PWAInstallButton } from './components/PWAInstallButton';
 
 import { initFirebase } from './lib/firebase';
 import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { collection, setDoc, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, orderBy } from 'firebase/firestore';
+import { collection, setDoc, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, orderBy, runTransaction } from 'firebase/firestore';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'overview' | 'kanban' | 'notes' | 'focus' | 'habits'>('overview');
@@ -120,16 +120,38 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [user]);
 
+
+  const resetXP = async () => {
+    if (!user || !db) return;
+    if (confirm('Tem certeza que quer zerar seu XP e voltar pro Nível 1?')) {
+      const statsRef = doc(db, 'stats', user.uid);
+      try {
+        await updateDoc(statsRef, { xp: 0, level: 1 });
+      } catch (e) {
+        await setDoc(statsRef, { xp: 0, level: 1 });
+      }
+    }
+  };
+
   const addXP = async (amount: number) => {
     if (!user || !db) return;
     const statsRef = doc(db, 'stats', user.uid);
-    let newXp = Math.max(0, stats.xp + amount); // Prevent negative XP
-    let newLevel = Math.floor(newXp / 100) + 1;
-    
     try {
-      await updateDoc(statsRef, { xp: newXp, level: newLevel });
+      await runTransaction(db, async (transaction) => {
+        const sfDoc = await transaction.get(statsRef);
+        if (!sfDoc.exists()) {
+          const newXp = Math.max(0, amount);
+          const newLevel = Math.floor(newXp / 100) + 1;
+          transaction.set(statsRef, { xp: newXp, level: newLevel });
+        } else {
+          const currentXp = sfDoc.data().xp || 0;
+          const newXp = Math.max(0, currentXp + amount);
+          const newLevel = Math.floor(newXp / 100) + 1;
+          transaction.update(statsRef, { xp: newXp, level: newLevel });
+        }
+      });
     } catch (e) {
-      await setDoc(statsRef, { xp: newXp, level: newLevel });
+      console.error("Erro na transação de XP: ", e);
     }
   };
 
@@ -370,6 +392,13 @@ export default function App() {
               <span className="text-xs lg:text-sm font-black text-zinc-100 truncate uppercase">{user.displayName || 'Império'}</span>
               <span className="text-[9px] lg:text-[10px] text-amber-500 font-bold truncate uppercase tracking-widest">Nível {stats.level} • {stats.xp} XP</span>
             </div>
+            <button 
+              onClick={resetXP}
+              className="p-2 text-zinc-500 hover:text-amber-500 hover:bg-amber-500/10 rounded-lg transition-colors shrink-0"
+              title="Zerar XP"
+            >
+              <RotateCcw size={16} />
+            </button>
             <button 
               onClick={handleLogout}
               className="p-2 text-zinc-500 hover:text-red-500 hover:bg-zinc-800 rounded-lg transition-colors shrink-0"
